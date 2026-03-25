@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KML/GPX 转 GeoJSON 示例</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            height: calc(100vh - 40px);
+        }
+
+        /* 左侧面板 */
+        .left-panel {
+            width: 450px;
+            flex-shrink: 0;
+            padding: 40px;
+            background: #fafafa;
+            border-right: 1px solid #e0e0e0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 右侧面板 */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        /* 标题样式 */
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #86868b;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        /* 使用说明 */
+        .info-card {
+            background: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+
+        .info-card strong {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .info-card ol {
+            padding-left: 20px;
+            font-size: 13px;
+            line-height: 1.8;
+            opacity: 0.95;
+        }
+
+        /* 表单元素 */
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .form-section label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #1d1d1f;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 15px;
+            border: 1.5px solid #d2d2d7;
+            border-radius: 10px;
+            background: white;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #007aff;
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+            border: 2px dashed #d2d2d7;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            text-align: center;
+        }
+
+        .file-upload-label:hover {
+            border-color: #007aff;
+            background: rgba(0, 122, 255, 0.02);
+        }
+
+        .file-upload-label.has-file {
+            border-color: #34c759;
+            background: rgba(52, 199, 89, 0.05);
+        }
+
+        .file-upload-text {
+            font-size: 14px;
+            color: #86868b;
+        }
+
+        .file-upload-text strong {
+            color: #007aff;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 24px 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 1px;
+            background: #e0e0e0;
+        }
+
+        .divider span {
+            position: relative;
+            background: #fafafa;
+            padding: 0 16px;
+            color: #86868b;
+            font-size: 13px;
+        }
+
+        /* 按钮样式 */
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        button {
+            padding: 14px 24px;
+            font-size: 15px;
+            font-weight: 500;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #007aff 0%, #005ecb 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f7;
+            color: #1d1d1f;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #e8e8ed;
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* 消息提示 */
+        .message-area {
+            min-height: 40px;
+            margin-top: 20px;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.info {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .message.success {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .message.error {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        /* 右侧输出区域 */
+        .output-header {
+            padding: 24px 32px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #fafafa;
+        }
+
+        .output-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d1d1f;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .output-header h2::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+            border-radius: 2px;
+        }
+
+        .output-content {
+            flex: 1;
+            padding: 24px 32px;
+            overflow: auto;
+            background: #ffffff;
+        }
+
+        #output {
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #1d1d1f;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: #f8f9fa;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            min-height: 100%;
+        }
+
+        /* 滚动条样式 */
+        .left-panel::-webkit-scrollbar,
+        .output-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .left-panel::-webkit-scrollbar-track,
+        .output-content::-webkit-scrollbar-track {
+            background: #f5f5f7;
+        }
+
+        .left-panel::-webkit-scrollbar-thumb,
+        .output-content::-webkit-scrollbar-thumb {
+            background: #d2d2d7;
+            border-radius: 4px;
+        }
+
+        .left-panel::-webkit-scrollbar-thumb:hover,
+        .output-content::-webkit-scrollbar-thumb:hover {
+            background: #aeaeb2;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1024px) {
+            .app-container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .left-panel {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+
+            .right-panel {
+                min-height: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 左侧面板 -->
+        <div class="left-panel">
+            <h1>KML/GPX 转 GeoJSON</h1>
+            <p class="subtitle">专业、高效的地理数据格式转换工具</p>
+            
+            <div class="info-card">
+                <strong>📖 使用说明</strong>
+                <ol>
+                    <li>选择 KML 或 GPX 文件，或输入 URL 地址</li>
+                    <li>点击"开始转换"按钮</li>
+                    <li>查看右侧转换后的 GeoJSON 结果</li>
+                    <li>支持复制或下载转换结果</li>
+                </ol>
+            </div>
+
+            <div class="form-section">
+                <label>📄 从 URL 加载</label>
+                <div class="input-wrapper">
+                    <input type="text" id="urlInput" placeholder="https://example.com/file.kml">
+                </div>
+            </div>
+
+            <div class="divider">
+                <span>或者</span>
+            </div>
+
+            <div class="form-section">
+                <label>📁 从本地文件</label>
+                <label for="fileInput" class="file-upload-label" id="fileUploadLabel">
+                    <div class="file-upload-text">
+                        <strong>点击选择文件</strong>
+                        支持 .kml 和 .gpx 格式
+                    </div>
+                </label>
+                <input type="file" id="fileInput" accept=".kml,.gpx">
+            </div>
+
+            <div class="button-group">
+                <button id="convertBtn" class="btn-primary" disabled>
+                    <span>✨</span> 开始转换
+                </button>
+                <button id="downloadBtn" class="btn-secondary" disabled>
+                    <span>⬇️</span> 下载 JSON 文件
+                </button>
+                <button id="copyBtn" class="btn-secondary" disabled>
+                    <span>📋</span> 复制结果
+                </button>
+            </div>
+
+            <div id="messageArea" class="message-area"></div>
+        </div>
+
+        <!-- 右侧面板 -->
+        <div class="right-panel">
+            <div class="output-header">
+                <h2>转换结果</h2>
+            </div>
+            <div class="output-content">
+                <div id="output">等待转换...</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // 导入转换工具
+        import { kmlToGeoJSON, gpxToGeoJSON } from './src/index.ts';
+
+        const fileInput = document.getElementById('fileInput');
+        const urlInput = document.getElementById('urlInput');
+        const convertBtn = document.getElementById('convertBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const output = document.getElementById('output');
+        const messageArea = document.getElementById('messageArea');
+        const fileUploadLabel = document.getElementById('fileUploadLabel');
+
+        let currentGeoJSON = null;
+
+        // 文件选择事件
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                urlInput.value = ''; // 清空 URL 输入
+                convertBtn.disabled = false;
+                
+                // 更新文件上传样式
+                fileUploadLabel.classList.add('has-file');
+                fileUploadLabel.innerHTML = `
+                    <div class="file-upload-text">
+                        <strong>✓ ${file.name}</strong>
+                        ${formatFileSize(file.size)} • 点击重新选择
+                    </div>
+                `;
+                
+                showMessage(`已选择文件：${file.name}`, 'info');
+            } else {
+                convertBtn.disabled = !urlInput.value;
+            }
+        });
+
+        // URL 输入事件
+        urlInput.addEventListener('input', (e) => {
+            const url = e.target.value;
+            if (url) {
+                fileInput.value = ''; // 清空文件选择
+                fileUploadLabel.classList.remove('has-file');
+                fileUploadLabel.innerHTML = `
+                    <div class="file-upload-text">
+                        <strong>点击选择文件</strong>
+                        支持 .kml 和 .gpx 格式
+                    </div>
+                `;
+                convertBtn.disabled = false;
+                showMessage(`已输入 URL: ${url}`, 'info');
+            } else {
+                convertBtn.disabled = fileInput.files.length > 0;
+            }
+        });
+
+        // 转换按钮点击事件
+        convertBtn.addEventListener('click', async () => {
+            const file = fileInput.files[0];
+            const url = urlInput.value.trim();
+
+            if (!file && !url) {
+                showMessage('请先选择一个文件或输入 URL', 'error');
+                return;
+            }
+
+            try {
+                let geojson;
+                
+                if (url) {
+                    // 从 URL 转换
+                    showMessage('正在从 URL 加载并转换...', 'info');
+                    const extension = url.split('.').pop().toLowerCase();
+                    
+                    if (extension === 'kml') {
+                        geojson = await kmlToGeoJSON(url);
+                    } else if (extension === 'gpx') {
+                        geojson = await gpxToGeoJSON(url);
+                    } else {
+                        throw new Error('不支持的文件格式，URL 应该指向 KML 或 GPX 文件');
+                    }
+                } else {
+                    // 从本地文件转换
+                    const text = await readFile(file);
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(text, 'text/xml');
+
+                    // 检查是否有解析错误
+                    const parseError = doc.querySelector('parsererror');
+                    if (parseError) {
+                        throw new Error('XML 解析失败');
+                    }
+
+                    const extension = file.name.split('.').pop().toLowerCase();
+                    
+                    if (extension === 'kml') {
+                        geojson = await kmlToGeoJSON(doc);
+                    } else if (extension === 'gpx') {
+                        geojson = await gpxToGeoJSON(doc);
+                    } else {
+                        throw new Error('不支持的文件格式，请选择 KML 或 GPX 文件');
+                    }
+                }
+
+                currentGeoJSON = geojson;
+                output.textContent = JSON.stringify(geojson, null, 2);
+                
+                downloadBtn.disabled = false;
+                copyBtn.disabled = false;
+                
+                const featureCount = geojson.features.length;
+                showMessage(`✨ 转换成功！共 ${featureCount} 个要素`, 'success');
+                
+            } catch (error) {
+                console.error('转换错误:', error);
+                output.textContent = `错误：${error.message}`;
+                showMessage('转换失败，请检查文件格式是否正确', 'error');
+                downloadBtn.disabled = true;
+                copyBtn.disabled = true;
+            }
+        });
+
+        // 下载按钮点击事件
+        downloadBtn.addEventListener('click', () => {
+            if (!currentGeoJSON) return;
+            
+            const blob = new Blob([JSON.stringify(currentGeoJSON, null, 2)], { 
+                type: 'application/json' 
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'converted.geojson';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showMessage('文件已下载', 'success');
+        });
+
+        // 复制按钮点击事件
+        copyBtn.addEventListener('click', () => {
+            if (!currentGeoJSON) return;
+            
+            navigator.clipboard.writeText(JSON.stringify(currentGeoJSON, null, 2))
+                .then(() => {
+                    showMessage('结果已复制到剪贴板', 'success');
+                })
+                .catch(err => {
+                    showMessage('复制失败：' + err.message, 'error');
+                });
+        });
+
+        // 辅助函数：格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // 辅助函数：读取文件
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(e);
+                reader.readAsText(file);
+            });
+        }
+
+        // 辅助函数：显示消息
+        function showMessage(message, type = 'info') {
+            messageArea.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+{
+  "name": "@giszhc/kml-to-geojson",
+  "version": "0.0.1",
+  "type": "module",
+  "files": [
+    "dist",
+    "types"
+  ],
+  "module": "dist/kml-to-geojson.js",
+  "types": "types/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/giszhc/kml-to-geojson.git"
+  },
+  "bugs": {
+    "url": "https://github.com/giszhc/kml-to-geojson/issues"
+  },
+  "keywords": [
+    "geojson",
+    "wkt"
+  ],
+  "homepage": "https://github.com/giszhc/kml-to-geojson#readme",
+  "scripts": {
+    "dev": "vite",
+    "build:types": "tsc -p tsconfig.build.json",
+    "build": "pnpm run build:types && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3",
+    "vite": "^7.2.4"
+  }
+}
