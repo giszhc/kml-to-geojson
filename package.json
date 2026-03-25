@@ -1,6 +1,6 @@
 {
   "name": "@giszhc/kml-to-geojson",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "files": [
     "dist",
@@ -30,6 +30,7 @@
     "dev": "vite",
     "build:types": "tsc -p tsconfig.build.json",
     "build": "vite build && pnpm run build:types",
+    "build:example": "vite build --config vite.example.config.ts",
     "preview": "vite preview"
   },
   "devDependencies": {
