@@ -16,6 +16,18 @@
 
 ---
 
+## 安装
+
+你可以通过 npm 或 pnpm 安装该库：
+
+```bash
+pnpm install @giszhc/kml-to-geojson
+# 或
+npm install @giszhc/kml-to-geojson
+```
+
+---
+
 ## API
 
 ### kmlToGeoJSON(input: Document | string): Promise<FeatureCollection>
@@ -30,6 +42,27 @@
 
 **返回：**
 - `Promise<FeatureCollection>` - GeoJSON FeatureCollection 对象
+
+**输出示例：**
+```json
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [120.5, 30.2]
+      },
+      "properties": {
+        "name": "示例地点",
+        "address": "测试地址",
+        "description": "描述信息"
+      }
+    }
+  ]
+}
+```
 
 **示例：**
 
@@ -216,58 +249,6 @@ console.log(geojson);
 
 ---
 
-## 支持的几何类型
-
-**KML:**
-- Point
-- LineString
-- Polygon
-- MultiGeometry
-- Track / gx:Track
-
-**GPX:**
-- Track (trk)
-- Route (rte)
-- Waypoint (wpt)
-
----
-
-## 输出示例
-
-```json
-{
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [120.5, 30.2]
-      },
-      "properties": {
-        "name": "示例地点",
-        "address": "测试地址",
-        "description": "描述信息"
-      }
-    }
-  ]
-}
-```
-
----
-
-## 安装
-
-你可以通过 npm 或 pnpm 安装该库：
-
-```bash
-pnpm install @giszhc/kml-to-geojson
-# 或
-npm install @giszhc/kml-to-geojson
-```
-
----
-
 ## 在线示例
 
 我们提供了一个功能完整的在线演示页面，您可以直接在浏览器中体验所有功能：
@@ -282,9 +263,11 @@ npm install @giszhc/kml-to-geojson
 
 ---
 
-## 浏览器环境使用示例
+## 使用示例
 
-### 从本地文件转换
+### 基本使用示例
+
+#### 从本地文件转换
 
 ```html
 <input type="file" id="fileInput" accept=".kml,.gpx">
@@ -315,7 +298,7 @@ async function convert() {
 </script>
 ```
 
-### 从网络 URL 转换
+#### 从网络 URL 转换
 
 ```typescript
 import { kmlToGeoJSON, gpxToGeoJSON } from '@giszhc/kml-to-geojson';
@@ -329,7 +312,7 @@ const gpxGeoJSON = await gpxToGeoJSON('https://example.com/hiking-track.gpx');
 console.log(gpxGeoJSON);
 ```
 
-### 结合地图库使用（Leaflet）
+#### 结合地图库使用（Leaflet）
 
 ```typescript
 import { kmlToGeoJSON } from '@giszhc/kml-to-geojson';
@@ -342,6 +325,22 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 const geojson = await kmlToGeoJSON('https://example.com/data.kml');
 L.geoJSON(geojson).addTo(map);
 ```
+
+---
+
+## 支持的几何类型
+
+**KML:**
+- Point
+- LineString
+- Polygon
+- MultiGeometry
+- Track / gx:Track
+
+**GPX:**
+- Track (trk)
+- Route (rte)
+- Waypoint (wpt)
 
 ---
 
