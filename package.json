@@ -20,13 +20,14 @@
   },
   "keywords": [
     "geojson",
-    "wkt"
+    "kml",
+    "gpx"
   ],
   "homepage": "https://github.com/giszhc/kml-to-geojson#readme",
   "scripts": {
     "dev": "vite",
     "build:types": "tsc -p tsconfig.build.json",
-    "build": "pnpm run build:types && vite build",
+    "build": "vite build && pnpm run build:types",
     "preview": "vite preview"
   },
   "devDependencies": {

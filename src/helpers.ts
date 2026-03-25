@@ -2,7 +2,7 @@
  * 工具函数模块
  */
 
-import type { CoordPairResult } from './types';
+import type { CoordPairResult } from './types.ts';
 
 // --- 正则表达式（内部使用）---
 const removeSpace = /\s*/g;

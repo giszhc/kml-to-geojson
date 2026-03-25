@@ -2,7 +2,7 @@
  * 针对 KML/GPX 转 GeoJSON 的轻量级工具 (TS 版本)
  */
 
-import type { GeoJSONFeature, FeatureCollection } from './types';
+import type { GeoJSONFeature, FeatureCollection } from './types.ts';
 import { 
     getElementsByTagName, getFirstElement, getAttribute, getNodeText, generateHash, xmlToString, 
     parseCoordinates, parseSingleCoord, createFeatureCollection, extractMultiFields, parseGPXCoordinate 
