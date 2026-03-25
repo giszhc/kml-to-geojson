@@ -2,7 +2,7 @@ import {defineConfig} from 'vite'
 
 export default defineConfig({
     build: {
-        outDir: 'example',
+        outDir: 'docs',
         emptyOutDir: true,
         rollupOptions: {
             input: {
