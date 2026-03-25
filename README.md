@@ -268,6 +268,20 @@ npm install @giszhc/kml-to-geojson
 
 ---
 
+## 在线示例
+
+我们提供了一个功能完整的在线演示页面，您可以直接在浏览器中体验所有功能：
+
+**🌐 立即体验：** [点击访问在线演示](https://giszhc.github.io/kml-to-geojson/)
+
+在线示例支持：
+- ✨ KML、GPX、OVKML、OVJSN 格式转换
+- 📁 本地文件上传
+- 🌐 URL 地址加载
+- 💾 结果下载和复制
+
+---
+
 ## 浏览器环境使用示例
 
 ### 从本地文件转换
