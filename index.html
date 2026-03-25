@@ -367,13 +367,13 @@
     <div class="app-container">
         <!-- 左侧面板 -->
         <div class="left-panel">
-            <h1>KML/GPX 转 GeoJSON</h1>
+            <h1>KML/GPX/OVKML/OVJSON 转 GeoJSON</h1>
             <p class="subtitle">专业、高效的地理数据格式转换工具</p>
-            
+                        
             <div class="info-card">
                 <strong>📖 使用说明</strong>
                 <ol>
-                    <li>选择 KML 或 GPX 文件，或输入 URL 地址</li>
+                    <li>选择 KML、GPX、OVKML 或 OVJSON 文件，或输入 URL 地址</li>
                     <li>点击"开始转换"按钮</li>
                     <li>查看右侧转换后的 GeoJSON 结果</li>
                     <li>支持复制或下载转换结果</li>
@@ -396,10 +396,10 @@
                 <label for="fileInput" class="file-upload-label" id="fileUploadLabel">
                     <div class="file-upload-text">
                         <strong>点击选择文件</strong>
-                        支持 .kml 和 .gpx 格式
+                        支持 .kml、.gpx、.ovkml 和 .ovjsn 格式
                     </div>
                 </label>
-                <input type="file" id="fileInput" accept=".kml,.gpx">
+                <input type="file" id="fileInput" accept=".kml,.gpx,.ovkml,.ovjsn">
             </div>
 
             <div class="button-group">
@@ -430,7 +430,7 @@
 
     <script type="module">
         // 导入转换工具
-        import { kmlToGeoJSON, gpxToGeoJSON } from './src/index.ts';
+        import { kmlToGeoJSON, gpxToGeoJSON, ovkmlToGeoJSON, ovjsnToGeoJSON } from './src/index.ts';
 
         const fileInput = document.getElementById('fileInput');
         const urlInput = document.getElementById('urlInput');
@@ -502,33 +502,42 @@
                     showMessage('正在从 URL 加载并转换...', 'info');
                     const extension = url.split('.').pop().toLowerCase();
                     
-                    if (extension === 'kml') {
-                        geojson = await kmlToGeoJSON(url);
+                    if (extension === 'kml' || extension === 'ovkml') {
+                        geojson = await ovkmlToGeoJSON(url);
                     } else if (extension === 'gpx') {
                         geojson = await gpxToGeoJSON(url);
+                    } else if (extension === 'ovjsn') {
+                        geojson = await ovjsnToGeoJSON(url);
                     } else {
-                        throw new Error('不支持的文件格式，URL 应该指向 KML 或 GPX 文件');
+                        throw new Error('不支持的文件格式，URL 应该指向 KML、OVKML、GPX 或 OVJSON 文件');
                     }
                 } else {
                     // 从本地文件转换
-                    const text = await readFile(file);
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(text, 'text/xml');
-
-                    // 检查是否有解析错误
-                    const parseError = doc.querySelector('parsererror');
-                    if (parseError) {
-                        throw new Error('XML 解析失败');
-                    }
-
                     const extension = file.name.split('.').pop().toLowerCase();
                     
-                    if (extension === 'kml') {
-                        geojson = await kmlToGeoJSON(doc);
-                    } else if (extension === 'gpx') {
-                        geojson = await gpxToGeoJSON(doc);
+                    if (extension === 'ovjsn') {
+                        // OVJSN 是 JSON 格式，直接读取文本
+                        const text = await readFile(file);
+                        geojson = await ovjsnToGeoJSON(text);
                     } else {
-                        throw new Error('不支持的文件格式，请选择 KML 或 GPX 文件');
+                        // KML、OVKML、GPX 需要 XML 解析
+                        const text = await readFile(file);
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(text, 'text/xml');
+
+                        // 检查是否有解析错误
+                        const parseError = doc.querySelector('parsererror');
+                        if (parseError) {
+                            throw new Error('XML 解析失败');
+                        }
+
+                        if (extension === 'kml') {
+                            geojson = await kmlToGeoJSON(doc);
+                        } else if (extension === 'ovkml') {
+                            geojson = await ovkmlToGeoJSON(doc);
+                        } else if (extension === 'gpx') {
+                            geojson = await gpxToGeoJSON(doc);
+                        }
                     }
                 }
 

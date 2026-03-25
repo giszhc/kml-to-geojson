@@ -1,13 +1,16 @@
 # kml-to-geojson
 
-一个简单、轻量的 JavaScript / TypeScript 工具库，用于将 **KML** 或 **GPX** 文件转换为 **GeoJSON** 格式。
+一个简单、轻量的 JavaScript / TypeScript 工具库，用于将 **KML**、**GPX**、**OVKML**（奥维 KML）或 **OVJSN**（奥维 JSON）文件转换为 **GeoJSON** 格式。
 
 支持以下特性：
 
 - **支持 KML 格式** - Point, LineString, Polygon, MultiGeometry, Track 等
 - **支持 GPX 格式** - Track, Route, Waypoint 等
+- **支持 OVKML 格式** - OpenVector KML 格式（奥维 KML）
+- **支持 OVJSN 格式** - OpenVector JSON 格式（奥维 JSON），包括标准 GeoJSON 和特殊层级格式
 - **支持本地文件和网络 URL** - 可直接传入 Document 对象或 HTTP(S) URL
 - **保留样式和属性信息** - name, address, description, styleUrl 等
+- **KML 颜色转换** - 自动将 KML 的 AABBGGRR 颜色格式转换为 RGBA
 - **异步处理** - 支持 Promise，方便现代 JavaScript 开发
 - **Tree Shaking 友好** - 支持按需引入
 
@@ -111,7 +114,7 @@ const gpxContent = `
 <?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" creator="Example">
   <trk>
-    <name>徒步轨迹</name>
+    <name>轨迹</name>
     <trkseg>
       <trkpt lat="30.1" lon="120.2"></trkpt>
       <trkpt lat="30.2" lon="120.3"></trkpt>
@@ -121,6 +124,94 @@ const gpxContent = `
 `;
 const geojson = await gpxToGeoJSON(gpxContent);
 console.log(geojson); // FeatureCollection
+```
+
+### ovjsnToGeoJSON(input: FeatureCollection | Record<string, any> | string): Promise<FeatureCollection>
+
+将 OVJSN 文档或 URL 转换为 GeoJSON FeatureCollection。支持两种格式：
+- **标准 GeoJSON 格式** - 直接返回 FeatureCollection
+- **OVJSN 特有格式** - 包含 Version, Type, ObjItems 等字段的层级结构数据（奥维 JSON 特有格式）
+
+**参数：**
+- `input` - 可以是：
+  - GeoJSON FeatureCollection 对象
+  - OVJSN 对象（包含 Version, Type, ObjItems 等字段的奥维 JSON 对象）
+  - OVJSN 文件的 URL 字符串（以 `http://` 或 `https://` 开头）
+  - OVJSN 文件内容的字符串
+
+**返回：**
+- `Promise<FeatureCollection>` - GeoJSON FeatureCollection 对象
+
+**示例：**
+
+```typescript
+import { ovjsnToGeoJSON } from '@giszhc/kml-to-geojson';
+
+// 方式 1：从本地文件读取（标准 GeoJSON 格式）
+const fileInput = document.getElementById('file');
+const file = fileInput.files[0];
+const text = await file.text();
+const geojson = await ovjsnToGeoJSON(text);
+console.log(geojson); // FeatureCollection
+```
+
+```typescript
+import { ovjsnToGeoJSON } from '@giszhc/kml-to-geojson';
+
+// 方式 2：从网络 URL 加载
+const geojson = await ovjsnToGeoJSON('https://example.com/data.ovjsn');
+console.log(geojson); // FeatureCollection
+```
+
+```typescript
+import { ovjsnToGeoJSON } from '@giszhc/kml-to-geojson';
+
+// 方式 3：OVJSN 特有格式（奥维 JSON 层级结构）
+const ovjsnData = {
+  "Version": "V10.1.6",
+  "Type": 1,
+  "ObjItems": [
+    {
+      "Type": 30,
+      "Object": {
+        "Name": "分组名称",
+        "ObjectDetail": {
+          "ObjChildren": [
+            {
+              "Type": 7,
+              "Object": {
+                "Name": "名称",
+                "ObjectDetail": {
+                  "Lat": 31.4048,
+                  "Lng": 120.8616
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+};
+const geojson = await ovjsnToGeoJSON(ovjsnData);
+console.log(geojson); 
+// 输出：
+// {
+//   "type": "FeatureCollection",
+//   "features": [
+//     {
+//       "type": "Feature",
+//       "geometry": {
+//         "type": "Point",
+//         "coordinates": [120.816, 31.40152048]
+//       },
+//       "properties": {
+//         "name": "名称",
+//         "group": ["分组名称"]
+//       }
+//     }
+//   ]
+// }
 ```
 
 ---

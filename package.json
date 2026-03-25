@@ -21,7 +21,9 @@
   "keywords": [
     "geojson",
     "kml",
-    "gpx"
+    "gpx",
+    "ovkml",
+    "ovjsn"
   ],
   "homepage": "https://github.com/giszhc/kml-to-geojson#readme",
   "scripts": {
